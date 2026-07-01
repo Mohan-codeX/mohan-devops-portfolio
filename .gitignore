@@ -1,0 +1,65 @@
+# ==========================
+# Python
+# ==========================
+backend/venv/
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+
+# Environment Variables
+backend/.env
+frontend/.env
+
+# Uploads
+backend/uploads/
+
+# ==========================
+# React / Node
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ==========================
+# IDE
+# ==========================
+.vscode/
+.idea/
+
+# ==========================
+# OS Files
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Logs
+# ==========================
+*.log
+
+# ==========================
+# Python Coverage
+# ==========================
+.coverage
+htmlcov/
+
+# ==========================
+# Terraform
+# ==========================
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+
+# ==========================
+# Kubernetes Secrets
+# ==========================
+*.secret.yaml
+
+# ==========================
+# Misc
+# ==========================
+*.swp
+*.swo
