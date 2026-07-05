@@ -36,7 +36,10 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = UserRepository.get_by_id(db, int(user_id))
+    user = UserRepository.get_by_id(
+        db,
+        int(user_id),
+    )
 
     if user is None:
         raise credentials_exception

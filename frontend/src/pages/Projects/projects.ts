@@ -1,0 +1,62 @@
+import type { Project } from "../../types/project";
+
+export const projects: Project[] = [
+  {
+    id: 1,
+    title: "DevOps Portfolio Platform",
+    description:
+      "A production-ready full-stack portfolio platform showcasing modern DevOps engineering practices. Built with a React frontend, FastAPI backend and PostgreSQL database, the application follows a scalable layered architecture with secure JWT authentication, Docker containerization, Infrastructure as Code and cloud-native deployment practices.",
+    status: "Completed",
+    featured: true,
+
+    technologies: [
+      "React 19",
+      "TypeScript",
+      "Tailwind CSS",
+      "FastAPI",
+      "PostgreSQL",
+      "SQLAlchemy",
+      "Docker",
+      "Docker Compose",
+      "Nginx",
+      "GitHub Actions",
+      "Terraform",
+      "AWS",
+      "Kubernetes",
+      "Helm",
+      "Prometheus",
+      "Grafana",
+      "Loki",
+    ],
+
+    highlights: [
+      "Responsive React Frontend",
+      "FastAPI REST API",
+      "JWT Authentication",
+      "Repository → Service → API Architecture",
+      "PostgreSQL Database",
+      "Admin Dashboard",
+      "Project Management",
+      "Skills Management",
+      "Experience Management",
+      "Education Management",
+      "Profile Management",
+      "Contact Management",
+      "Resume Upload",
+      "Visitor Analytics Dashboard",
+      "Dockerized Deployment",
+      "Nginx Reverse Proxy",
+      "GitHub Actions CI/CD",
+      "Terraform Infrastructure as Code",
+      "AWS Cloud Deployment",
+      "Kubernetes Orchestration",
+      "Helm Package Management",
+      "Prometheus Monitoring",
+      "Grafana Dashboards",
+      "Loki Log Aggregation",
+    ],
+
+    github: "https://github.com/Mohan-codeX/mohan-devops-portfolio",
+    live: "",
+  },
+];
