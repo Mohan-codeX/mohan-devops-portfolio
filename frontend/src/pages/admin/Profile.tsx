@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 
 import {
   getProfile,
+  createProfile,
   updateProfile,
   type Profile as ProfileType,
 } from "../../services/profileService";
@@ -18,6 +19,7 @@ import {
 const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [profileExists, setProfileExists] = useState(true);
 
   const [profile, setProfile] = useState<ProfileType>({
     full_name: "",
@@ -43,10 +45,15 @@ const Profile = () => {
       const data = await getProfile();
 
       setProfile(data);
+      setProfileExists(true);
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.detail ?? "Failed to load profile."
-      );
+      if (error?.response?.status === 404) {
+        setProfileExists(false);
+      } else {
+        toast.error(
+          error?.response?.data?.detail ?? "Failed to load profile."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -65,12 +72,22 @@ const Profile = () => {
     try {
       setSaving(true);
 
-      await updateProfile(profile);
+      if (profileExists) {
+        const updated = await updateProfile(profile);
+        setProfile(updated);
 
-      toast.success("Profile updated successfully.");
+        toast.success("Profile updated successfully.");
+      } else {
+        const created = await createProfile(profile);
+
+        setProfile(created);
+        setProfileExists(true);
+
+        toast.success("Profile created successfully.");
+      }
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.detail ?? "Failed to update profile."
+        error?.response?.data?.detail ?? "Failed to save profile."
       );
     } finally {
       setSaving(false);

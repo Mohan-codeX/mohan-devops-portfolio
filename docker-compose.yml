@@ -45,11 +45,11 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/mohan_portfolio
 
-    ports:
-      - "8000:8000"
-
     volumes:
       - ./backend/uploads:/app/uploads
+
+    expose:
+      - "8000"
 
     networks:
       - mohan-network
@@ -66,8 +66,27 @@ services:
     depends_on:
       - backend
 
+    expose:
+      - "80"
+
+    networks:
+      - mohan-network
+
+  reverse-proxy:
+    build:
+      context: ./reverse-proxy
+      dockerfile: Dockerfile
+
+    container_name: mohan-reverse-proxy
+
+    restart: unless-stopped
+
+    depends_on:
+      - frontend
+      - backend
+
     ports:
-      - "3000:80"
+      - "80:80"
 
     networks:
       - mohan-network
