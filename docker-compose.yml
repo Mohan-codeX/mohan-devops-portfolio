@@ -46,7 +46,7 @@ services:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/mohan_portfolio
 
     volumes:
-      - ./backend/uploads:/app/uploads
+      - ./backend:/app
 
     expose:
       - "8000"

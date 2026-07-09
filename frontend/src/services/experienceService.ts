@@ -2,9 +2,14 @@ import api from "../api/axios";
 
 export interface Experience {
   id?: number;
+
   company: string;
   role: string;
   duration: string;
+  location: string;
+  current: boolean;
+  technologies: string[];
+  responsibilities: string[];
   description: string;
 }
 

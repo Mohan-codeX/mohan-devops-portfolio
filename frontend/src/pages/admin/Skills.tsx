@@ -1,310 +1,232 @@
-import { useEffect, useState } from "react";
-import { FiEdit, FiPlus, FiTrash2, FiX } from "react-icons/fi";
-import toast from "react-hot-toast";
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
-  createSkill,
-  deleteSkill,
+  FaAws,
+  FaDocker,
+  FaGitAlt,
+  FaGithub,
+  FaLinux,
+  FaNetworkWired,
+  FaPython,
+  FaTools,
+} from "react-icons/fa";
+import {
+  SiGithubactions,
+  SiGrafana,
+  SiKubernetes,
+  SiPostgresql,
+  SiPrometheus,
+  SiTerraform,
+} from "react-icons/si";
+
+import {
   getSkills,
-  updateSkill,
   type Skill,
 } from "../../services/skillService";
 
-const initialForm: Skill = {
-  name: "",
-  category: "",
-  level: 80,
+const sectionConfig = [
+  {
+    title: "☁️ Cloud & Infrastructure",
+    category: "Cloud & Infrastructure",
+    description:
+      "Building secure, scalable and production-ready cloud infrastructure using modern Infrastructure as Code practices.",
+  },
+  {
+    title: "🐳 Containers & Platform Engineering",
+    category: "Containers & Platform Engineering",
+    description:
+      "Packaging, deploying and orchestrating containerized applications across modern cloud platforms.",
+  },
+  {
+    title: "⚙️ CI/CD, GitOps & Automation",
+    category: "CI/CD, GitOps & Automation",
+    description:
+      "Automating software delivery, infrastructure deployments and operational workflows.",
+  },
+  {
+    title:
+      "📊 Monitoring, Observability & Production Operations",
+    category:
+      "Monitoring, Observability & Production Operations",
+    description:
+      "Maintaining reliable production systems through monitoring, logging, troubleshooting and incident response.",
+  },
+  {
+    title: "🌐 Linux, Networking & Security",
+    category: "Linux, Networking & Security",
+    description:
+      "Working with Linux systems, networking fundamentals and secure remote administration.",
+  },
+  {
+    title: "🗄️ Databases",
+    category: "Databases",
+    description:
+      "Experience working with relational databases for application and infrastructure services.",
+  },
+];
+
+const iconMap: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  AWS: FaAws,
+  Docker: FaDocker,
+  "Docker Compose": FaDocker,
+  Terraform: SiTerraform,
+  "Infrastructure as Code": SiTerraform,
+
+  Kubernetes: SiKubernetes,
+  Helm: SiTerraform,
+
+  Git: FaGitAlt,
+  GitHub: FaGithub,
+  "GitHub Actions": SiGithubactions,
+  "Argo CD": SiGithubactions,
+  GitOps: FaGitAlt,
+
+  Python: FaPython,
+  "Shell Scripting": FaLinux,
+  "Cron Jobs": FaLinux,
+  "Workflow Automation": FaPython,
+
+  Prometheus: SiPrometheus,
+  Grafana: SiGrafana,
+  Loki: SiGrafana,
+  "Production Monitoring": SiGrafana,
+  "Log Analysis": SiGrafana,
+  "Incident Handling": SiGrafana,
+  "Root Cause Analysis": SiGrafana,
+
+  Linux: FaLinux,
+  "TCP/IP": FaNetworkWired,
+  DNS: FaNetworkWired,
+  SSH: FaNetworkWired,
+  SCP: FaNetworkWired,
+  SFTP: FaNetworkWired,
+  "RSA Authentication": FaNetworkWired,
+
+  PostgreSQL: SiPostgresql,
+  "MS SQL Server": SiPostgresql,
+  SQLite: SiPostgresql,
 };
 
-const Skills = () => {
+export default function Skills() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-
-  const [formData, setFormData] = useState<Skill>(initialForm);
-
-  const loadSkills = async () => {
-    try {
-      setLoading(true);
-      const data = await getSkills();
-      setSkills(data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load skills.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const loadSkills = async () => {
+      try {
+        const data = await getSkills();
+        setSkills(data);
+      } catch (error) {
+        console.error("Failed to load skills:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadSkills();
   }, []);
 
-  const resetForm = () => {
-    setEditingId(null);
-    setFormData(initialForm);
-    setShowForm(false);
-  };
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "level" ? Number(value) : value,
+  const groupedSkills = useMemo(() => {
+    return sectionConfig.map((section) => ({
+      ...section,
+      skills: skills
+        .filter(
+          (skill) => skill.category === section.category
+        )
+        .sort((a, b) => b.level - a.level),
     }));
-  };
+  }, [skills]);
 
-  const handleAdd = () => {
-    setEditingId(null);
-    setFormData(initialForm);
-    setShowForm(true);
-  };
-
-  const handleEdit = (skill: Skill) => {
-    setEditingId(skill.id!);
-    setFormData(skill);
-    setShowForm(true);
-  };
-
-  const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
-    e.preventDefault();
-
-    if (!formData.name.trim() || !formData.category.trim()) {
-      toast.error("Please fill all fields.");
-      return;
-    }
-
-    try {
-      setSaving(true);
-
-      if (editingId !== null) {
-        await updateSkill(editingId, formData);
-        toast.success("Skill updated successfully.");
-      } else {
-        await createSkill(formData);
-        toast.success("Skill created successfully.");
-      }
-
-      await loadSkills();
-      resetForm();
-    } catch (error) {
-      console.error(error);
-      toast.error("Unable to save skill.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this skill?")) {
-      return;
-    }
-
-    try {
-      await deleteSkill(id);
-      toast.success("Skill deleted successfully.");
-      await loadSkills();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete skill.");
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Skills</h1>
-          <p className="mt-2 text-slate-400">
-            Manage your portfolio skills.
-          </p>
-        </div>
-
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400"
+  if (loading) {
+    return (
+      <section className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-slate-400">
+          Loading skills...
+        </p>
+      </section>
+    );
+  }  return (
+    <section className="min-h-screen py-24">
+      <div className="mx-auto max-w-7xl px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto max-w-4xl text-center"
         >
-          <FiPlus />
-          Add Skill
-        </button>
-      </div>
+          <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-400">
+            Technical Expertise
+          </span>
 
-      {showForm && (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">
-              {editingId ? "Edit Skill" : "Add Skill"}
-            </h2>
+          <h1 className="mt-8 text-5xl font-bold text-white">
+            DevOps Technology Stack
+          </h1>
 
-            <button
-              onClick={resetForm}
-              className="rounded-lg bg-slate-800 p-2 text-slate-300 hover:bg-slate-700"
+          <p className="mt-8 text-lg leading-8 text-slate-400">
+            Focused on building scalable cloud infrastructure, automating
+            software delivery, improving system reliability and operating
+            production environments using modern DevOps practices.
+          </p>
+        </motion.div>
+
+        <div className="mt-20 grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
+          {groupedSkills.map((group, index) => (
+            <motion.div
+              key={group.category}
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08 }}
+              whileHover={{
+                y: -8,
+                scale: 1.01,
+              }}
+              className="rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-xl transition-all duration-300 hover:border-cyan-500/40 hover:shadow-[0_0_30px_rgba(34,211,238,0.08)]"
             >
-              <FiX />
-            </button>
-          </div>
+              <h2 className="text-3xl font-bold text-white">
+                {group.title}
+              </h2>
 
-          <form
-            onSubmit={handleSubmit}
-            className="grid grid-cols-1 gap-5 md:grid-cols-3"
-          >
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">
-                Skill
-              </label>
+              <p className="mt-4 leading-7 text-slate-400">
+                {group.description}
+              </p>
 
-              <input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
-              />
-            </div>
+              <div className="mt-8 flex flex-wrap gap-4">
+                {group.skills.length === 0 ? (
+                  <span className="text-slate-500">
+                    No skills added yet.
+                  </span>
+                ) : (
+                  group.skills.map((skill) => {
+                    const Icon =
+                      iconMap[skill.name] ?? FaTools;
 
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">
-                Category
-              </label>
+                    return (
+                      <motion.div
+                        key={skill.id}
+                        whileHover={{
+                          scale: 1.05,
+                        }}
+                        transition={{
+                          duration: 0.2,
+                        }}
+                        className="flex items-center gap-3 rounded-xl border border-white/10 bg-slate-900/60 px-5 py-3 transition-all duration-300 hover:border-cyan-400 hover:bg-cyan-500/10"
+                      >
+                        <Icon className="text-xl text-cyan-400" />
 
-              <input
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm text-slate-300">
-                Level (%)
-              </label>
-
-              <input
-                type="number"
-                min={0}
-                max={100}
-                name="level"
-                value={formData.level}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div className="md:col-span-3 flex gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-xl bg-cyan-500 px-6 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"
-              >
-                {saving
-                  ? "Saving..."
-                  : editingId
-                  ? "Update Skill"
-                  : "Create Skill"}
-              </button>
-
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-xl bg-slate-800 px-6 py-3 font-semibold text-white hover:bg-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+                        <span className="font-medium text-slate-200">
+                          {skill.name}
+                        </span>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
+            </motion.div>
+          ))}
         </div>
-      )}
-
-      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-        <table className="w-full">
-          <thead className="bg-slate-800">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm text-slate-300">
-                Skill
-              </th>
-              <th className="px-6 py-4 text-left text-sm text-slate-300">
-                Category
-              </th>
-              <th className="px-6 py-4 text-left text-sm text-slate-300">
-                Level
-              </th>
-              <th className="px-6 py-4 text-center text-sm text-slate-300">
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="px-6 py-10 text-center text-slate-400"
-                >
-                  Loading skills...
-                </td>
-              </tr>
-            ) : skills.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="px-6 py-10 text-center text-slate-400"
-                >
-                  No skills found.
-                </td>
-              </tr>
-            ) : (
-              skills.map((skill) => (
-                <tr
-                  key={skill.id}
-                  className="border-t border-slate-800"
-                >
-                  <td className="px-6 py-5 text-white">
-                    {skill.name}
-                  </td>
-
-                  <td className="px-6 py-5 text-slate-300">
-                    {skill.category}
-                  </td>
-
-                  <td className="px-6 py-5">
-                    <span className="rounded-full bg-cyan-500/20 px-3 py-1 text-sm text-cyan-400">
-                      {skill.level}%
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-5">
-                    <div className="flex justify-center gap-3">
-                      <button
-                        onClick={() => handleEdit(skill)}
-                        className="rounded-lg bg-slate-800 p-2 text-yellow-400 hover:bg-slate-700"
-                      >
-                        <FiEdit />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(skill.id!)}
-                        className="rounded-lg bg-slate-800 p-2 text-red-400 hover:bg-slate-700"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
       </div>
-    </div>
+    </section>
   );
-};
-
-export default Skills;
+}

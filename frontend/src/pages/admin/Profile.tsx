@@ -24,6 +24,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<ProfileType>({
     full_name: "",
     title: "",
+    tagline: "",
     about: "",
     email: "",
     phone: "",
@@ -32,6 +33,11 @@ const Profile = () => {
     linkedin: "",
     website: "",
     profile_image: "",
+    years_of_experience: 0,
+    projects_completed: 0,
+    certifications: 0,
+    resume_title: "",
+    resume_description: "",
   });
 
   useEffect(() => {
@@ -44,7 +50,16 @@ const Profile = () => {
 
       const data = await getProfile();
 
-      setProfile(data);
+      setProfile({
+        ...data,
+        tagline: data.tagline ?? "",
+        years_of_experience: Number(data.years_of_experience ?? 0),
+        projects_completed: Number(data.projects_completed ?? 0),
+        certifications: Number(data.certifications ?? 0),
+        resume_title: data.resume_title ?? "",
+        resume_description: data.resume_description ?? "",
+      });
+
       setProfileExists(true);
     } catch (error: any) {
       if (error?.response?.status === 404) {
@@ -62,9 +77,19 @@ const Profile = () => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
+    const { name, value } = e.target;
+
+    const numericFields = [
+      "years_of_experience",
+      "projects_completed",
+      "certifications",
+    ];
+
     setProfile({
       ...profile,
-      [e.target.name]: e.target.value,
+      [name]: numericFields.includes(name)
+        ? Number(value)
+        : value,
     });
   };
 
@@ -133,6 +158,7 @@ const Profile = () => {
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 lg:col-span-2">
           <div className="grid gap-6 md:grid-cols-2">
+
             <div>
               <label className="mb-2 block text-sm text-slate-400">
                 Full Name
@@ -154,6 +180,19 @@ const Profile = () => {
               <input
                 name="title"
                 value={profile.title}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm text-slate-400">
+                Tagline
+              </label>
+
+              <input
+                name="tagline"
+                value={profile.tagline}
                 onChange={handleChange}
                 className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
               />
@@ -201,6 +240,48 @@ const Profile = () => {
               />
             </div>
 
+            <div>
+              <label className="mb-2 block text-sm text-slate-400">
+                Years of Experience
+              </label>
+
+              <input
+                type="number"
+                name="years_of_experience"
+                value={profile.years_of_experience}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm text-slate-400">
+                Projects Completed
+              </label>
+
+              <input
+                type="number"
+                name="projects_completed"
+                value={profile.projects_completed}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm text-slate-400">
+                Certifications
+              </label>
+
+              <input
+                type="number"
+                name="certifications"
+                value={profile.certifications}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
+              />
+            </div>
+
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm text-slate-400">
                 About
@@ -210,6 +291,19 @@ const Profile = () => {
                 rows={6}
                 name="about"
                 value={profile.about}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm text-slate-400">
+                Resume Title
+              </label>
+
+              <input
+                name="resume_title"
+                value={profile.resume_title}
                 onChange={handleChange}
                 className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
               />
@@ -253,6 +347,21 @@ const Profile = () => {
                 className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
               />
             </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm text-slate-400">
+                Resume Description
+              </label>
+
+              <textarea
+                rows={4}
+                name="resume_description"
+                value={profile.resume_description}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
+              />
+            </div>
+
           </div>
 
           <div className="mt-8">

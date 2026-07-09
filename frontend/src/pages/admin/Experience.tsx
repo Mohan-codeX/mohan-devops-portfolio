@@ -18,6 +18,10 @@ const emptyExperience: Experience = {
   company: "",
   role: "",
   duration: "",
+  location: "",
+  current: false,
+  technologies: [],
+  responsibilities: [],
   description: "",
 };
 
@@ -30,10 +34,19 @@ const ExperiencePage = () => {
     useState<Experience>(emptyExperience);
 
   const [loading, setLoading] = useState(true);
+
   const [saving, setSaving] = useState(false);
 
   const [editingId, setEditingId] =
     useState<number | null>(null);
+
+  const [technologiesInput, setTechnologiesInput] =
+    useState("");
+
+  const [
+    responsibilitiesInput,
+    setResponsibilitiesInput,
+  ] = useState("");
 
   useEffect(() => {
     loadExperiences();
@@ -61,31 +74,57 @@ const ExperiencePage = () => {
       HTMLInputElement | HTMLTextAreaElement
     >
   ) => {
-    setExperience({
-      ...experience,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, type } = e.target as HTMLInputElement;
+
+    if (type === "checkbox") {
+      setExperience((prev) => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked,
+      }));
+      return;
+    }
+
+    setExperience((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const resetForm = () => {
+    setExperience(emptyExperience);
+    setEditingId(null);
+    setTechnologiesInput("");
+    setResponsibilitiesInput("");
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
 
+      const payload: Experience = {
+        ...experience,
+        technologies: technologiesInput
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+
+        responsibilities: responsibilitiesInput
+          .split("\n")
+          .map((r) => r.trim())
+          .filter(Boolean),
+      };
+
       if (editingId) {
-        await updateExperience(
-          editingId,
-          experience
-        );
+        await updateExperience(editingId, payload);
 
         toast.success("Experience updated.");
       } else {
-        await createExperience(experience);
+        await createExperience(payload);
 
         toast.success("Experience created.");
       }
 
-      setExperience(emptyExperience);
-      setEditingId(null);
+      resetForm();
 
       await loadExperiences();
     } catch (error: any) {
@@ -98,17 +137,27 @@ const ExperiencePage = () => {
     }
   };
 
-  const handleEdit = (
-    item: Experience
-  ) => {
-    setExperience(item);
+  const handleEdit = (item: Experience) => {
+    setExperience({
+      ...item,
+      location: item.location ?? "",
+      current: item.current ?? false,
+      technologies: item.technologies ?? [],
+      responsibilities: item.responsibilities ?? [],
+    });
+
+    setTechnologiesInput(
+      (item.technologies ?? []).join(", ")
+    );
+
+    setResponsibilitiesInput(
+      (item.responsibilities ?? []).join("\n")
+    );
 
     setEditingId(item.id ?? null);
   };
 
-  const handleDelete = async (
-    id?: number
-  ) => {
+  const handleDelete = async (id?: number) => {
     if (!id) return;
 
     const confirmed = window.confirm(
@@ -122,7 +171,7 @@ const ExperiencePage = () => {
 
       toast.success("Experience deleted.");
 
-      loadExperiences();
+      await loadExperiences();
     } catch (error: any) {
       toast.error(
         error?.response?.data?.detail ??
@@ -147,6 +196,7 @@ const ExperiencePage = () => {
 
       <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
         <div className="grid gap-4">
+
           <input
             name="company"
             placeholder="Company"
@@ -171,6 +221,46 @@ const ExperiencePage = () => {
             className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white"
           />
 
+          <input
+            name="location"
+            placeholder="Location"
+            value={experience.location}
+            onChange={handleChange}
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white"
+          />
+
+          <label className="flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white">
+            <input
+              type="checkbox"
+              name="current"
+              checked={experience.current}
+              onChange={handleChange}
+            />
+
+            Currently Working Here
+          </label>
+
+          <input
+            placeholder="Technologies (comma separated)"
+            value={technologiesInput}
+            onChange={(e) =>
+              setTechnologiesInput(e.target.value)
+            }
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white"
+          />
+
+          <textarea
+            rows={4}
+            placeholder="Responsibilities (one per line)"
+            value={responsibilitiesInput}
+            onChange={(e) =>
+              setResponsibilitiesInput(
+                e.target.value
+              )
+            }
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white"
+          />
+
           <textarea
             rows={4}
             name="description"
@@ -180,19 +270,30 @@ const ExperiencePage = () => {
             className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white"
           />
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex w-fit items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-60"
-          >
-            <FiPlus />
+          <div className="flex gap-3">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-60"
+            >
+              <FiPlus />
 
-            {saving
-              ? "Saving..."
-              : editingId
-              ? "Update Experience"
-              : "Add Experience"}
-          </button>
+              {saving
+                ? "Saving..."
+                : editingId
+                ? "Update Experience"
+                : "Add Experience"}
+            </button>
+
+            <button
+              type="button"
+              onClick={resetForm}
+              className="rounded-xl border border-slate-700 px-5 py-3 text-white hover:bg-slate-800"
+            >
+              Reset
+            </button>
+          </div>
+
         </div>
       </div>
 
@@ -218,6 +319,10 @@ const ExperiencePage = () => {
                 </th>
 
                 <th className="px-6 py-4 text-left text-sm text-slate-300">
+                  Location
+                </th>
+
+                <th className="px-6 py-4 text-left text-sm text-slate-300">
                   Status
                 </th>
 
@@ -228,6 +333,7 @@ const ExperiencePage = () => {
             </thead>
 
             <tbody>
+
               {experiences.map((item) => (
                 <tr
                   key={item.id}
@@ -245,9 +351,21 @@ const ExperiencePage = () => {
                     {item.duration}
                   </td>
 
+                  <td className="px-6 py-5 text-slate-300">
+                    {item.location}
+                  </td>
+
                   <td className="px-6 py-5">
-                    <span className="rounded-full bg-green-500/20 px-3 py-1 text-sm text-green-400">
-                      Published
+                    <span
+                      className={`rounded-full px-3 py-1 text-sm ${
+                        item.current
+                          ? "bg-green-500/20 text-green-400"
+                          : "bg-slate-700 text-slate-300"
+                      }`}
+                    >
+                      {item.current
+                        ? "Current"
+                        : "Previous"}
                     </span>
                   </td>
 
@@ -278,13 +396,14 @@ const ExperiencePage = () => {
               {experiences.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="py-8 text-center text-slate-400"
                   >
                     No experiences found.
                   </td>
                 </tr>
               )}
+
             </tbody>
           </table>
         )}
