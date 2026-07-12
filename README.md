@@ -76,39 +76,44 @@ logging/
 docker/
 scripts/
 docs/
+assets/
 ```
 
 ---
 
 # Architecture
 
-```text
-                    GitHub
-                       │
-                       ▼
-              GitHub Actions CI
-                       │
-        Build Docker Images
-                       │
-                       ▼
-                 Docker Hub
-                       │
-              GitHub Actions CD
-                       │
-                       ▼
-                  Amazon EKS
-                       │
-          Helm Release Deployment
-                       │
-      ┌────────────────┼────────────────┐
-      ▼                ▼                ▼
- React Frontend   FastAPI Backend   PostgreSQL
-      │                │                │
-      └──────────Nginx Reverse Proxy────┘
-                       │
-                       ▼
-          AWS Application Load Balancer
-```
+<p align="center">
+  <img src="assets/architecture.png" alt="DevOps Portfolio Architecture" width="100%">
+</p>
+
+---
+
+# Screenshots
+
+## Portfolio Home
+
+![Portfolio Home](assets/portfolio-home.png)
+
+## GitHub Actions - CI Pipeline
+
+![GitHub Actions CI](assets/github-actions-ci.png)
+
+## GitHub Actions - CD Pipeline
+
+![GitHub Actions CD](assets/github-actions-cd.png)
+
+## Amazon EKS Workloads
+
+![EKS Pods](assets/eks-pods.png)
+
+## Grafana Dashboard
+
+![Grafana Dashboard](assets/grafana-dashboard.png)
+
+## Loki Log Explorer
+
+![Loki Logs](assets/loki-logs.png)
 
 ---
 
@@ -306,6 +311,4 @@ This project is released under the MIT License.
 
 **Mohan**
 
-GitHub:
-https://github.com/Mohan-codeX
-
+GitHub: https://github.com/Mohan-codeX
