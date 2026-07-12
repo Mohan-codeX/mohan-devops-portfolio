@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: {{ include "portfolio.fullname" . }}-postgres
+  labels:
+    {{- include "portfolio.postgres.labels" . | nindent 4 }}
+
+spec:
+  type: {{ .Values.postgres.service.type }}
+
+  selector:
+    {{- include "portfolio.postgres.selectorLabels" . | nindent 4 }}
+
+  ports:
+    - name: postgres
+      port: {{ .Values.postgres.service.port }}
+      targetPort: {{ .Values.postgres.service.port }}
+      protocol: TCP

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: {{ include "portfolio.fullname" . }}-reverse-proxy
+  labels:
+    {{- include "portfolio.reverseproxy.labels" . | nindent 4 }}
+
+spec:
+  type: {{ .Values.reverseProxy.service.type }}
+
+  selector:
+    {{- include "portfolio.reverseproxy.selectorLabels" . | nindent 4 }}
+
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.reverseProxy.service.port }}
+      targetPort: {{ .Values.reverseProxy.service.targetPort }}

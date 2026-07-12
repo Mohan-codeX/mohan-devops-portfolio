@@ -1,0 +1,90 @@
+name: CD - Deploy to Amazon EKS
+
+on:
+  workflow_run:
+    workflows:
+      - CI - Build and Push Docker Images
+    types:
+      - completed
+
+concurrency:
+  group: cd-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+
+  HELM_RELEASE: mohan-portfolio
+  HELM_CHART_PATH: helm/portfolio
+  KUBE_NAMESPACE: default
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configure kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --name "${EKS_CLUSTER_NAME}" \
+            --region "${AWS_REGION}"
+
+      - name: Verify Cluster
+        run: |
+          kubectl get nodes
+
+      - name: Deploy
+        run: |
+          IMAGE_TAG=sha-${GITHUB_SHA::7}
+
+          echo "Deploying image tag ${IMAGE_TAG}"
+
+          helm upgrade --install "${HELM_RELEASE}" "${HELM_CHART_PATH}" \
+            --namespace "${KUBE_NAMESPACE}" \
+            --create-namespace \
+            --set frontend.image.tag="${IMAGE_TAG}" \
+            --set backend.image.tag="${IMAGE_TAG}" \
+            --set reverseProxy.image.tag="${IMAGE_TAG}" \
+            --atomic \
+            --wait \
+            --timeout 10m
+
+      - name: Verify Rollout
+        run: |
+          kubectl rollout status deployment/${HELM_RELEASE}-portfolio-frontend -n ${KUBE_NAMESPACE}
+          kubectl rollout status deployment/${HELM_RELEASE}-portfolio-backend -n ${KUBE_NAMESPACE}
+          kubectl rollout status deployment/${HELM_RELEASE}-portfolio-reverse-proxy -n ${KUBE_NAMESPACE}
+
+      - name: Verify Resources
+        run: |
+          kubectl get pods -n ${KUBE_NAMESPACE}
+          kubectl get ingress -n ${KUBE_NAMESPACE}
+          kubectl get svc -n ${KUBE_NAMESPACE}
+
+      - name: Helm Status
+        run: |
+          helm status "${HELM_RELEASE}" -n "${KUBE_NAMESPACE}"

@@ -1,0 +1,69 @@
+module "networking" {
+  source = "./modules/networking"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  vpc_cidr = "10.0.0.0/16"
+
+  availability_zones = [
+    "ap-south-2a",
+    "ap-south-2b"
+  ]
+
+  public_subnet_cidrs = [
+    "10.0.1.0/24",
+    "10.0.2.0/24"
+  ]
+
+  private_subnet_cidrs = [
+    "10.0.101.0/24",
+    "10.0.102.0/24"
+  ]
+}
+
+module "iam" {
+  source = "./modules/iam"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
+module "security" {
+  source = "./modules/security"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  vpc_id = module.networking.vpc_id
+}
+
+module "eks" {
+  source = "./modules/eks"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  cluster_version = "1.33"
+
+  vpc_id = module.networking.vpc_id
+
+  private_subnet_ids = module.networking.private_subnet_ids
+
+  cluster_role_arn = module.iam.eks_cluster_role_arn
+  node_role_arn    = module.iam.eks_node_group_role_arn
+
+  ebs_csi_driver_role_arn = module.iam.ebs_csi_driver_role_arn
+
+  cluster_security_group_id = module.security.cluster_security_group_id
+
+  node_instance_types = [
+    "t3.small"
+  ]
+
+  desired_size = 2
+  min_size     = 2
+  max_size     = 4
+
+  disk_size = 30
+}

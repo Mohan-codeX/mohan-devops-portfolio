@@ -1,0 +1,129 @@
+global:
+  imagePullSecrets: []
+  storageClass: "gp2"
+
+frontend:
+  replicaCount: 1
+
+  image:
+    repository: mohancodex/mohan-portfolio-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+backend:
+  replicaCount: 1
+
+  image:
+    repository: mohancodex/mohan-portfolio-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+  config:
+    algorithm: HS256
+    accessTokenExpireMinutes: 30
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  livenessProbe:
+    path: /docs
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    path: /docs
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+postgres:
+  image:
+    repository: postgres
+    tag: "17-alpine"
+    pullPolicy: IfNotPresent
+
+  database: mohan_portfolio
+  username: postgres
+  password: password
+
+  service:
+    type: ClusterIP
+    port: 5432
+
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+reverseProxy:
+  replicaCount: 1
+
+  image:
+    repository: mohancodex/mohan-portfolio-reverse-proxy
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+ingress:
+  enabled: true
+
+  className: alb
+
+  annotations: {}
+
+  host: ""
+
+  tls:
+    enabled: false
+    secretName: ""
+
+secrets:
+  secretKey: "change_this_to_a_long_random_secret_key"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
