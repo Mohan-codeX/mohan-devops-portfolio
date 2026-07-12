@@ -55,3 +55,10 @@ def root():
     return {
         "message": "Mohan Portfolio API is running."
     }
+
+
+@app.get("/health", tags=["Health"])
+def health():
+    return {
+        "status": "healthy"
+    }

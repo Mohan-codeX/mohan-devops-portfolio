@@ -49,12 +49,12 @@ backend:
       memory: 512Mi
 
   livenessProbe:
-    path: /docs
+    path: /health
     initialDelaySeconds: 30
     periodSeconds: 10
 
   readinessProbe:
-    path: /docs
+    path: /health
     initialDelaySeconds: 10
     periodSeconds: 5
 
