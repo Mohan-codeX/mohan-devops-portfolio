@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "reverse-proxy/**"
+      - "helm/**"
+      - "infrastructure/**"
+      - "docker-compose.yml"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 concurrency:
